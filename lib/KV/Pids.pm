@@ -10,10 +10,10 @@ sub add {
   my ($self, @pids) = @_;
   my $kv = $self->{kv};
   my $type = $self->{type};
-  $kv->ioloop->recurring(0.25 => sub { $_->die->ping or $_->ioloop->emit('exit') })
-    if $type eq 'die' && !$self->pids;
-  $kv->ioloop->recurring(0.25 => sub { $_->kill->ping })
-    if $type eq 'kill' && !$self->pids;
+  $self->{recurring}->{die} = $kv->ioloop->recurring(0.25 => sub { $_->die->ping or $_->ioloop->emit('exit') })
+    if $type eq 'die' && !$self->{recurring}->{die};
+  $self->{recurring}->{kill} = $kv->ioloop->recurring(0.25 => sub { $_->kill->ping })
+    if $type eq 'kill' && !$self->{recurring}->{kill};
   my %pids = map { $_ => 1 } @pids, $self->pids;
   if (keys %pids != $self->pids ) {
     $kv->store->hidden->set($type => join ':', keys %pids);
