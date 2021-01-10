@@ -1,4 +1,4 @@
-package KV::Store;
+package KV::Backend::SHM;
 
 use strict;
 use warnings;
@@ -29,7 +29,6 @@ sub file { sprintf '%s/%s', shift->{path}, shift }
 sub file_get {
   my ($self, $k) = @_;
   $k = "_$k" if $self->{hidden};
-  printf "STORE: %s\n", $self->file($k) if DEBUG && !$self->{hidden};
   open A, $self->file($k) or return;
   my $v = <A>;
   CORE::close A;
@@ -39,7 +38,6 @@ sub file_get {
 sub file_set {
   my ($self, $k, $v) = @_;
   $k = "_$k" if $self->{hidden};
-  printf "STORE: %s\n", $self->file($k) if DEBUG && !$self->{hidden};
   open A, '>'.$self->file($k) or return;
   print A $v if $v;
   CORE::close A;
@@ -63,7 +61,6 @@ sub flushall {
 sub get {
   my ($self, $k) = @_;
   my $v = $self->file_get($k) || $self->def_get($k);
-  printf "STORE %s => %s\n", $k, $v || '' if DEBUG && !$self->{hidden};
   $self->{hidden} = 0;
   return $v;
 }
@@ -87,7 +84,6 @@ sub new {
   $self->{path} ||= '';
   $self->{path} =~ s/^\/|\/$//g;
   $self->{path} = join '/', $self->{root}, $self->{path};
-  $self->{path} =~ s/\/$//g;
   make_path($self->{path});
   return bless $self, $class;
 }

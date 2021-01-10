@@ -4,16 +4,14 @@ use 5.010;
 use strict;
 use warnings;
 
-use constant DEBUG => sub { $ENV{KV_PIDS_DEBUG} || 0 };
+use constant DEBUG => $ENV{KV_PIDS_DEBUG} || 0;
 
 sub add {
   my ($self, @pids) = @_;
   my $kv = $self->{kv};
   my $type = $self->{type};
-  $self->{recurring}->{die} = $kv->ioloop->recurring(0.25 => sub { $_->die->ping or $_->ioloop->emit('exit') })
-    if $type eq 'die' && !$self->{recurring}->{die};
-  $self->{recurring}->{kill} = $kv->ioloop->recurring(0.25 => sub { $_->kill->ping })
-    if $type eq 'kill' && !$self->{recurring}->{kill};
+  $kv->ioloop->{pids} = $kv->ioloop->recurring(0.25 => sub { $_->kill->ping or $_->killgroup->kill; $_->die->ping or $_->ioloop->emit('exit') })
+    unless $kv->ioloop->{ping};
   my %pids = map { $_ => 1 } @pids, $self->pids;
   if (keys %pids != $self->pids ) {
     $kv->store->hidden->set($type => join ':', keys %pids);
@@ -26,7 +24,7 @@ sub add {
 
 sub kill {
   my $self = shift;
-  CORE::kill 15, $_ for $self->pids;
+  $self->remove($_) and CORE::kill 15, $_ for $self->pids;
 }
 
 sub new {

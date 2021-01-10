@@ -1,10 +1,12 @@
 package KV::Server;
+use parent 'KV::Connection';
 
 use strict;
 use warnings;
 use IO::Socket::INET;
+use Data::Dumper;
 
-use constant DEBUG => sub { $ENV{KV_SERVER_DEBUG} || 0 };
+use constant DEBUG => $ENV{KV_SERVER_DEBUG} || 0;
 
 sub new {
   my $class = shift;
@@ -17,7 +19,7 @@ sub new {
     Reuse => 1,
     Blocking => 0,
   ) or die "cannot create socket $!\n";
-  print "server waiting for client connections on port 7777\n";
+  print "server waiting for client connections on port 7777\n" if DEBUG;
   return bless $self, $class;
 }
 
@@ -41,6 +43,7 @@ sub send {
   my $socket = $self->{socket} or return;
   print "\rsend to $self->{address}:$self->{port}: @_\n" if DEBUG;
   $socket->send(@_);
+  return $self;
 }
 
 sub shutdown {

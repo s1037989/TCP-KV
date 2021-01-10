@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Time::HiRes;
 
-use constant DEBUG => sub { $ENV{KV_IOLOOP_DEBUG} || 0 };
+use constant DEBUG => $ENV{KV_IOLOOP_DEBUG} || 0;
 
 sub emit {
   my ($self, $event) = (shift, shift);
